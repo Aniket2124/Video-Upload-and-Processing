@@ -1,18 +1,51 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Detail</title>
-</head>
-<body>
-    <h2>{{ video.title }}</h2>
-<video width="640" height="360" controls>
-  <source src="{{ video.video_file.url }}" type="video/mp4">
-  {% if subtitle.subtitle_file %}
-    <track src="{{ subtitle.subtitle_file.url }}" kind="subtitles" srclang="en" label="English" default>
-  {% endif %}
-</video>
+{% extends 'video_upload_app/base.html' %}
+{% block title %}Video Detail{% endblock %}
 
-</body>
-</html>
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <h2 class="mb-4">{{ video.title }}</h2>
+
+            <!-- Video Player -->
+            <div class="video-container mb-4">
+                <video width="100%" height="auto" controls>
+                    <!-- Play the video from the timestamp -->
+                    <source src="{{ video.video_file.url }}#t={{ timestamp }}" type="video/mp4">
+                    {% if subtitle.subtitle_file %}
+                        <track src="{{ subtitle.subtitle_file.url }}" kind="subtitles" srclang="en" label="English" default>
+                    {% endif %}
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+        </div>
+
+        <!-- Search Form and Results -->
+        <div class="col-md-4">
+            <!-- Search Form -->
+            <form method="post" class="d-flex mb-3">
+                {% csrf_token %}
+                <input type="search" name="query" class="form-control" placeholder="Search in subtitles..." value="{{ search_query }}">
+                <button class="btn btn-success btn-sm px-3 mx-2" name="search">Search</button>
+            </form>
+
+            <!-- Search Results -->
+            {% if search_query %}
+                <h5 class="mt-3">Search Results for: <span class="text-primary">"{{ search_query }}"</span></h5>
+                <ul class="list-group">
+                    {% for result in subtitle_matches %}
+                        <li class="list-group-item">
+                            <!-- Link to play the video starting at the timestamp -->
+                            <a href="?query={{ search_query }}&timestamp={{ result.start_time }}" class="text-decoration-none">
+                                <strong>{{ result.start_time }}</strong> - {{ result.subtitle_text }}
+                            </a>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item text-muted">No results found.</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -4,8 +4,8 @@ from .models import Video, Subtitle
 
 @admin.register(Video)
 class VideoAdmin(admin.ModelAdmin):
-    list_display = ['video_file', 'title']
+    list_display = ['title', 'video_file']
 
 @admin.register(Subtitle)
 class SubtitleAdmin(admin.ModelAdmin):
-    list_display = ['video', 'language', 'subtitle_file']
+    list_display = ['video', 'language', 'subtitle_text', 'subtitle_file']

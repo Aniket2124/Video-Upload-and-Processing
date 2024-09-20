@@ -8,9 +8,30 @@ class Video(models.Model):
 
     def __str__(self):
         return self.title
-
+    
 class Subtitle(models.Model):
     video = models.ForeignKey(Video, on_delete=models.CASCADE)
     language = models.CharField(max_length=10)  # e.g., 'en', 'es'
-    subtitle_file = models.FileField(upload_to='subtitles/')
-    timestamps = models.JSONField(default=dict)  # Stores subtitles with timestamps
+    start_time = models.CharField(max_length=20, null=True)
+    end_time = models.CharField(max_length=20, null=True)
+    subtitle_text = models.TextField(null=True)
+    subtitle_file = models.FileField(upload_to='subtitles/', null=True, blank=True)  # To store subtitle files
+
+    def __str__(self) -> str:
+        return f"{self.video.title} - {self.language} ({self.start_time} to {self.end_time})"
+
+
+# class Subtitle(models.Model):
+#     video = models.ForeignKey(Video, on_delete=models.CASCADE)
+#     language = models.CharField(max_length=10)  # e.g., 'en', 'es'
+#     start_time = models.CharField(max_length=20,null=True)
+#     end_time = models.CharField(max_length=20,null=True)
+#     subtitle_text = models.TextField(null=True)
+
+#     def __str__(self) -> str:
+#         return f"{self.video} -- {self.end_time}"   
+    # subtitle_file = models.FileField(upload_to='subtitles/')
+    # timestamps = models.JSONField(default=dict)  # Stores subtitles with timestamps
+    
+    # def __str__(self):
+    #     return f"{self.video.title} ({self.language})"
