@@ -12,12 +12,12 @@ This project is a video processing application that allows users to upload, proc
 - PGAdmin (for PostgreSQL database management)
 
 ## Setup Guide
-## Clone the Repository
+### 1. Clone the Repository
 
 - git clone <repository-url>
 - cd <repository-folder>
 
-### 1. Create and Activate Virtual Environment
+### 2. Create and Activate Virtual Environment
 
 It's recommended to use a virtual environment to manage your project's dependencies.
 
