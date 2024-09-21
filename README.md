@@ -47,6 +47,8 @@ venv\Scripts\activate
    ```bash
    docker-compose up --build
 
+### Django development server is starting and showing Starting development server at http://0.0.0.0:8000/, but you cannot access the application from http://localhost:8000 or http://127.0.0.1:8000
+
 ### If you don`t have docker setup on your system
 ## Update Database Credentials in Django Settings
 DATABASES = {
