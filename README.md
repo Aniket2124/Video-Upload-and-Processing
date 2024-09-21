@@ -4,13 +4,18 @@ This project is a video processing application that allows users to upload, proc
 
 ## Prerequisites
 
-- Python 3.8+
+- Python 3.9+
+- Docker
 - PostgreSQL
 - Redis
 - Virtualenv
 - PGAdmin (for PostgreSQL database management)
 
 ## Setup Guide
+## Clone the Repository
+
+git clone <repository-url>
+cd <repository-folder>
 
 ### 1. Create and Activate Virtual Environment
 
@@ -22,6 +27,8 @@ pip install virtualenv
 
 # Create a virtual environment
 virtualenv venv
+#OR
+python3 -m venv venv
 
 # Activate the virtual environment
 # On Linux/macOS:
@@ -30,11 +37,17 @@ source venv/bin/activate
 # On Windows:
 venv\Scripts\activate
 
-## Clone the Repository
+### Note:-
+### If You Have Docker Installed
 
-git clone <repository-url>
-cd <repository-folder>
+1. **Start Docker**: Ensure Docker is running on your system.
 
+2. **Build and Start Services**: Use the following command to build and start your Docker services as defined in the `docker-compose.yml` file:
+
+   ```bash
+   docker-compose up --build
+
+### If you don`t have docker setup on your system
 ## Update Database Credentials in Django Settings
 DATABASES = {
     'default': {
