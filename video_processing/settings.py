@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-g-^fbc!2t9v2x+(=6dy%@xfw5*3k-2*%(94v**w(w5^v!s=$jd
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -84,7 +84,8 @@ DATABASES = {
         'NAME': 'VideoDB',
         'USER': 'postgres',
         'PASSWORD': 'postgres',
-        'HOST': 'localhost',
+        'HOST': 'db',   #for docker use
+        # 'HOST': 'localhost',    #for local use
         'PORT': 5432
     }
 }
@@ -139,3 +140,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
+
+## FOr Docker Use
+CELERY_BROKER_URL = 'redis://redis:6379/0'
+
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True

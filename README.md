@@ -1,0 +1,64 @@
+# Video Processing App
+
+This project is a video processing application that allows users to upload, process, and view videos, with integrated subtitle search functionality.
+
+## Prerequisites
+
+- Python 3.8+
+- PostgreSQL
+- Redis
+- Virtualenv
+- PGAdmin (for PostgreSQL database management)
+
+## Setup Guide
+
+### 1. Create and Activate Virtual Environment
+
+It's recommended to use a virtual environment to manage your project's dependencies.
+
+```bash
+# Install virtualenv if you don't have it
+pip install virtualenv
+
+# Create a virtual environment
+virtualenv venv
+
+# Activate the virtual environment
+# On Linux/macOS:
+source venv/bin/activate
+
+# On Windows:
+venv\Scripts\activate
+
+## Clone the Repository
+
+git clone <repository-url>
+cd <repository-folder>
+
+## Update Database Credentials in Django Settings
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': '<your-database-name>',
+        'USER': '<your-database-user>',
+        'PASSWORD': '<your-database-password>',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
+
+## Install Requirements
+pip install -r requirements.txt
+
+## Run Migrations
+python manage.py makemigrations
+python manage.py migrate
+
+## Create a Superuser
+python manage.py createsuperuser
+
+## Run redis server
+celery -A video_processing worker -l info
+
+## Run the Django Server
+python manage.py runserver

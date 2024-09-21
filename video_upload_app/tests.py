@@ -58,43 +58,62 @@ class SubtitleModelTest(TestCase):
         self.assertEqual(str(self.subtitle), expected_string)
 
 
-class UploadVideoViewTest(TestCase):
-
+class VideoViewsTestCase(TestCase):
     def setUp(self):
-        # Setup data or other prerequisites here
-        self.url = reverse('upload')  # Assuming 'upload' is the name of the URL pattern
+        # Create a temporary directory for subtitle files
+        self.temp_dir = tempfile.mkdtemp()
 
-    @patch('video_upload_app.views.process_video.delay')  # Mock the Celery task
-    def test_upload_video_success(self, mock_process_video):
-        """Test if video is uploaded successfully and task is triggered."""
-        video_file = SimpleUploadedFile("test_video.mp4", b"video_content", content_type="video/mp4")
+        # Create a sample video
+        self.video = Video.objects.create(
+            title='Test Video',
+            processed=True,
+            video_file='path/to/video.mp4'  # Update this to a valid video path
+        )
 
-        # Simulate a POST request with a valid form
-        response = self.client.post(self.url, {
-            'title': 'Test Video',
-            'video_file': video_file,
-        }, follow=True) #after a successful form submission, the user is often redirected to another page
+        # Create a sample subtitle file
+        self.subtitle_file = os.path.join(self.temp_dir, 'test_subtitle.srt')
+        with open(self.subtitle_file, 'w', encoding='utf-8') as f:
+            f.write("1\n00:00:01,000 --> 00:00:02,000\nHello World\n\n")
+            f.write("2\n00:00:03,000 --> 00:00:04,000\nGoodbye World\n\n")
 
-        # Check if video was successfully created
-        self.assertEqual(response.status_code, 200)  # Check if the request was successful
-        self.assertEqual(Video.objects.count(), 1)  # One video should be created
-        video = Video.objects.first()
-        self.assertEqual(video.title, 'Test Video')
+        self.subtitle = Subtitle.objects.create(
+            video=self.video,
+            subtitle_file=self.subtitle_file  # Assuming the model has this field
+        )
 
-        # Check if the task was triggered with the correct argument
-        mock_process_video.assert_called_once_with(video.id)
+    def tearDown(self):
+        # Clean up the temporary directory
+        os.remove(self.subtitle_file)
+        os.rmdir(self.temp_dir)
 
-        # Ensure it redirects to the videos page (as defined in your view)
-        self.assertRedirects(response, '/videos/')
-
-    def test_upload_video_invalid_form(self):
-        """Test if invalid form returns the upload page with errors."""
-        # Simulate a POST request with an invalid form (missing video file)
-        response = self.client.post(self.url, {
-            'title': 'Test Video Without File',
+    def test_upload_video_view(self):
+        response = self.client.post(reverse('upload_video'), {
+            'video_file': open('path/to/video.mp4', 'rb')  # Update to a valid test video file
         })
+        self.assertEqual(response.status_code, 302)  # Expecting a redirect after a successful upload
+        self.assertTrue(Video.objects.filter(title='Test Video').exists())
 
-        # Check if form is invalid and page renders with errors
-        self.assertEqual(response.status_code, 200)  # Form errors should return 200
-        # self.assertContains(response, 'This field is required')  # Check error message
-        self.assertEqual(Video.objects.count(), 0)  # No video should be created
+    def test_videos_list_view(self):
+        response = self.client.get(reverse('videos_list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'video_upload_app/videos_list.html')
+        self.assertIn(self.video, response.context['videos'])
+
+    def test_video_detail_view_with_subtitle(self):
+        response = self.client.get(reverse('video_detail', args=[self.video.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'video_upload_app/video_detail.html')
+        self.assertEqual(response.context['video'], self.video)
+        self.assertIsNotNone(response.context['subtitle'])
+
+    def test_search_in_subtitles(self):
+        query = "Hello"
+        results = search_in_subtitles(self.subtitle_file, query)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]['text'], "Hello World")
+        self.assertEqual(results[0]['start_time'], "00:00:01,000")
+
+    def test_search_in_subtitles_no_results(self):
+        query = "Nonexistent"
+        results = search_in_subtitles(self.subtitle_file, query)
+        self.assertEqual(len(results), 0)

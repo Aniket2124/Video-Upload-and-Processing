@@ -2,50 +2,176 @@
 {% block title %}Video Detail{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-md-8">
-            <h2 class="mb-4">{{ video.title }}</h2>
+<div class="video-detail-container">
+    <!-- Search form -->
+    <form method="GET" action="{% url 'video_detail' video.id %}" class="subtitle-search-form">
+        <input type="text" name="q" class="search-input" placeholder="Search subtitles..." autofocus>
+        <button type="submit" class="search-button">Search</button>
+    </form>
 
-            <!-- Video Player -->
-            <div class="video-container mb-4">
-                <video width="100%" height="auto" controls>
-                    <!-- Play the video from the timestamp -->
-                    <source src="{{ video.video_file.url }}#t={{ timestamp }}" type="video/mp4">
-                    {% if subtitle.subtitle_file %}
-                        <track src="{{ subtitle.subtitle_file.url }}" kind="subtitles" srclang="en" label="English" default>
-                    {% endif %}
-                    Your browser does not support the video tag.
-                </video>
-            </div>
+    <div class="video-and-subtitles">
+        <!-- Video Player -->
+        <div class="video-wrapper">
+            <video id="video-player" class="video-player" controls>
+                <source src="{{ video.video_file.url }}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
         </div>
 
-        <!-- Search Form and Results -->
-        <div class="col-md-4">
-            <!-- Search Form -->
-            <form method="post" class="d-flex mb-3">
-                {% csrf_token %}
-                <input type="search" name="query" class="form-control" placeholder="Search in subtitles..." value="{{ search_query }}">
-                <button class="btn btn-success btn-sm px-3 mx-2" name="search">Search</button>
-            </form>
-
-            <!-- Search Results -->
-            {% if search_query %}
-                <h5 class="mt-3">Search Results for: <span class="text-primary">"{{ search_query }}"</span></h5>
-                <ul class="list-group">
-                    {% for result in subtitle_matches %}
-                        <li class="list-group-item">
-                            <!-- Link to play the video starting at the timestamp -->
-                            <a href="?query={{ search_query }}&timestamp={{ result.start_time }}" class="text-decoration-none">
-                                <strong>{{ result.start_time }}</strong> - {{ result.subtitle_text }}
+        <!-- Display search results on the right side of the video -->
+        <div class="subtitle-results">
+            {% if search_results %}
+                <h3>Search Results:</h3>
+                <ul class="search-results">
+                    {% for result in search_results %}
+                        <li>
+                            <a href="#" class="play-video" data-timestamp="{{ result.start_time }}">
+                                <strong>{{ result.start_time }}:</strong> {{ result.text }}
                             </a>
                         </li>
-                    {% empty %}
-                        <li class="list-group-item text-muted">No results found.</li>
                     {% endfor %}
                 </ul>
+            {% else %}
+                {% if query %}
+                    <p class="no-results">No results found for "{{ query }}".</p>
+                {% else %}
+                    <p class="no-results">Use the search bar above to search for subtitles.</p>
+                {% endif %}
             {% endif %}
         </div>
     </div>
 </div>
+
+<!-- JavaScript for handling video playback from subtitle timestamps -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const videoPlayer = document.getElementById('video-player');
+    const playLinks = document.querySelectorAll('.play-video');
+
+    playLinks.forEach(link => {
+        link.addEventListener('click', function (e) {
+            e.preventDefault();
+            const timestamp = this.getAttribute('data-timestamp');
+
+            // Convert timestamp (HH:MM:SS,ms) to seconds
+            const timeParts = timestamp.split(':');
+            const hours = parseInt(timeParts[0], 10);
+            const minutes = parseInt(timeParts[1], 10);
+            const seconds = parseFloat(timeParts[2].replace(',', '.'));
+
+            const totalSeconds = (hours * 3600) + (minutes * 60) + seconds;
+
+            // Set the video player's current time to the timestamp and play
+            videoPlayer.currentTime = totalSeconds;
+            videoPlayer.play();
+
+            // Highlight the current subtitle being played
+            playLinks.forEach(l => l.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+
+    // Optional: Pause video when the user navigates away
+    window.addEventListener('blur', () => {
+        videoPlayer.pause();
+    });
+});
+</script>
+
+<style>
+/* Styling for a better user experience */
+.video-detail-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.subtitle-search-form {
+    display: flex;
+    margin-bottom: 20px;
+}
+
+.search-input {
+    flex: 1;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    margin-right: 10px;
+}
+
+.search-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #007BFF;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.search-button:hover {
+    background-color: #0056b3;
+}
+
+/* Flexbox layout to position video and subtitles side by side */
+.video-and-subtitles {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.video-wrapper {
+    flex: 2;
+    text-align: center;
+}
+
+.video-player {
+    width: 100%;
+    max-width: 600px;
+    height: auto;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* Subtitle results positioned to the right of the video */
+.subtitle-results {
+    flex: 1;
+    max-height: 400px; /* Set a maximum height with scrolling if the list is long */
+    overflow-y: auto;
+    background-color: #f8f9fa;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.search-results {
+    list-style: none;
+    padding: 0;
+}
+
+.search-results li {
+    margin: 10px 0;
+}
+
+.play-video {
+    color: #007BFF;
+    text-decoration: none;
+}
+
+.play-video:hover {
+    text-decoration: underline;
+}
+
+.play-video.active {
+    font-weight: bold;
+    color: #0056b3;
+}
+
+.no-results {
+    font-style: italic;
+    color: #888;
+}
+</style>
+
 {% endblock %}

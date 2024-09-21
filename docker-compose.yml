@@ -1,0 +1,45 @@
+version: '3'
+
+services:
+  db:
+    image: postgres
+    environment:
+      POSTGRES_DB: VideoDB
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - db_data:/var/lib/postgresql/data  # Persist database data
+
+  redis:
+    image: redis:alpine
+
+  web:
+    build: .
+    command: bash -c "
+      python3 manage.py migrate && 
+      python3 manage.py createsuperuser --no-input || true &&
+      python3 manage.py runserver 0.0.0.0:8000"  # Start Django server
+    environment:
+      DJANGO_SUPERUSER_USERNAME: admin  # Replace with your desired username
+      DJANGO_SUPERUSER_PASSWORD: adminpass  # Replace with your desired password
+      DJANGO_SUPERUSER_EMAIL: admin@example.com  # Replace with your desired email
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+
+  celery:
+    build: .
+    command: celery -A video_processing worker --loglevel=info
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/0  # Set broker URL via environment variable
+    depends_on:
+      - redis
+    volumes:
+      - .:/app
+
+volumes:
+  db_data:  # Define a volume for PostgreSQL data
