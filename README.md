@@ -14,8 +14,8 @@ This project is a video processing application that allows users to upload, proc
 ## Setup Guide
 ## Clone the Repository
 
-git clone <repository-url>
-cd <repository-folder>
+- git clone <repository-url>
+- cd <repository-folder>
 
 ### 1. Create and Activate Virtual Environment
 
